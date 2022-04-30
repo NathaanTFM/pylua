@@ -168,7 +168,7 @@ int pylua_call_python(lua_State* L) {
 
     // arg handling:
     // if it's a tuple, unpack it, otherwise, single arg
-    int err;
+    int err = 0;
     argc = 1;
     if (PyTuple_CheckExact(res)) {
         argc = pylua_push_tuple(L, res, 0);
