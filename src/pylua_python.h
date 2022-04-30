@@ -9,9 +9,9 @@ PyObject* pylua_get_as_unicode(lua_State* L, int idx);
 
 
 #if INT_MIN == LONG_MIN && INT_MAX == LONG_MAX
-#   define pylua_pylong_as_int(val) (int)PyLong_AsLong(val)
+#   define pylua_pylong_as_int(obj) (int)PyLong_AsLong(obj)
 #else
-int pylua_pylong_as_int(PyObject* val);
+int pylua_pylong_as_int(PyObject* obj);
 #endif
 
 int pylua_push_pyobj(lua_State* L, PyObject* obj);

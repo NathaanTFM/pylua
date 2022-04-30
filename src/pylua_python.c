@@ -21,21 +21,19 @@ PyObject* pylua_get_as_unicode(lua_State* L, int idx) {
 }
 
 
-#if INT_MIN == LONG_MIN && INT_MAX == LONG_MAX
-#   define pylua_pylong_as_int(val) (int)PyLong_AsLong(val)
-#else
+#if !(INT_MIN == LONG_MIN && INT_MAX == LONG_MAX)
 /**
  * Convert a PyLong to an int.
  * Behaves like PyLong_AsLong.
 */
-int pylua_pylong_as_int(PyObject* val) {
+int pylua_pylong_as_int(PyObject* obj) {
     // values does not fit a long, it won't fit an int
-    long val = PyLong_AsLong(val);
+    long val = PyLong_AsLong(obj);
     if (val == -1 && PyErr_Occurred())
         return -1;
 
     if (val < INT_MIN || val > INT_MAX) {
-        PyErr_SetString(PyErr_OverflowError, "Python int too large to convert to C int");
+        PyErr_SetString(PyExc_OverflowError, "Python int too large to convert to C int");
         return -1;
     }
 
@@ -187,7 +185,7 @@ PyObject* pylua_get_as_pyobj(struct LuaStateInfo* info, int idx) {
             // Python does not support long doubles or floats, so we're dealing with doubles no matter what
             return PyFloat_FromDouble((double)lua_tonumber(L, idx));
 
-        case LUA_TSTRING:
+        case LUA_TSTRING: ;
             // We are using bytes, because lua strings does not have any kind of encoding
             size_t len;
             const char* val = lua_tolstring(L, idx, &len);
