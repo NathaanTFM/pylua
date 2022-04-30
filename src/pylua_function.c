@@ -107,6 +107,7 @@ PyObject* LuaFunction_setfenv(LuaObject* self, PyObject* args) {
 static PyMethodDef LuaFunction_methods[] = {
     {"getfenv", (PyCFunction)LuaFunction_getfenv, METH_VARARGS, "return a function environment"},
     {"setfenv", (PyCFunction)LuaFunction_setfenv, METH_VARARGS, "define a function environment"},
+    {NULL}
 };
 
 PyTypeObject LuaFunctionType = {
@@ -114,5 +115,6 @@ PyTypeObject LuaFunctionType = {
     .tp_name = "pylua.LuaFunction",
     .tp_doc = "Lua function",
     .tp_base = &LuaObjectType,
-    .tp_call = (ternaryfunc)LuaFunction_call
+    .tp_call = (ternaryfunc)LuaFunction_call,
+    .tp_methods = LuaFunction_methods
 };
