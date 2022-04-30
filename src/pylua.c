@@ -18,7 +18,7 @@ static PyModuleDef module = {
 
 PyMODINIT_FUNC PyInit_pylua(void) {
     // init exceptions
-    if (!pylua_init_exceptions())
+    if (pylua_init_exceptions() < 0)
         return NULL;
     
     // init types
