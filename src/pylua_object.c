@@ -52,7 +52,7 @@ PyObject* LuaObject_richcompare(LuaObject* self, PyObject* other, int op) {
 /**
  * Handle the deallocation of LuaObject
  */
-void LuaObject_dealloc(LuaObject* self) {
+static void LuaObject_dealloc(LuaObject* self) {
     // the unref (with protect)
     if (self->sobj->info.state) {
         //PYLUA_TRY(self->sobj,

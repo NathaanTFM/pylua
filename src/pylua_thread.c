@@ -4,7 +4,7 @@
 #include "pylua_python.h"
 #include "pylua_stateinfo.h"
 
-PyObject* LuaThread_call(LuaObject* self, PyObject* args) {
+static PyObject* LuaThread_call(LuaObject* self, PyObject* args) {
     if (!args || PyTuple_GET_SIZE(args) < 0) {
         PyErr_SetString(PyExc_TypeError, "function takes at least 1 argument (0 given)");
         return NULL;
@@ -42,7 +42,7 @@ PyObject* LuaThread_call(LuaObject* self, PyObject* args) {
 }
 
 
-PyObject* LuaThread_get_state(LuaObject* self, PyObject* args) {
+static PyObject* LuaThread_get_state(LuaObject* self, PyObject* args) {
     PYLUA_CHECK(L, &self->sobj->info, NULL);
     PYLUA_PROTECT(&self->sobj->info, NULL);
     

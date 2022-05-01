@@ -6,8 +6,4 @@
 
 PyTypeObject LuaFunctionType;
 
-PyObject* LuaFunction_call(LuaObject* self, PyObject* args, PyObject* kwargs);
-PyObject* LuaFunction_getfenv(LuaObject* self, PyObject* args);
-PyObject* LuaFunction_setfenv(LuaObject* self, PyObject* args);
-
 #endif

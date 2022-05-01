@@ -8,7 +8,7 @@
  * Implement tp_new for our LuaState type
  * which just allocs our type with default NULL values
  */
-PyObject* LuaState_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
+static PyObject* LuaState_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
     LuaStateObject* self = (LuaStateObject*)type->tp_alloc(type, 0);
     if (self != NULL) {
         self->mem = 0;
@@ -29,7 +29,7 @@ PyObject* LuaState_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
  * Implement tp_init for our LuaState type ;
  * Create a lua_State, setup panic handlers, etc.
  */
-int LuaState_init(LuaStateObject* self, PyObject* args, PyObject* kwds) {
+static int LuaState_init(LuaStateObject* self, PyObject* args, PyObject* kwds) {
     static char* keywords[] = {"openlibs", NULL};
     int openlibs = 1; // init the libs by default
 
@@ -65,7 +65,7 @@ int LuaState_init(LuaStateObject* self, PyObject* args, PyObject* kwds) {
  * Implements LuaState.load_file, which compiles a script from a file
  * to a callable LuaFunction
  */
-PyObject* LuaState_load_file(LuaStateObject* self, PyObject* args) {
+static PyObject* LuaState_load_file(LuaStateObject* self, PyObject* args) {
     // parse the args
     const char* filename;
     const char* mode = NULL; // defaults to "bt"
@@ -109,7 +109,7 @@ PyObject* LuaState_load_file(LuaStateObject* self, PyObject* args) {
  * Implements LuaState.load_string, which compiles a string
  * to a callable LuaFunction
  */
-PyObject* LuaState_load_string(LuaStateObject* self, PyObject* args) {
+static PyObject* LuaState_load_string(LuaStateObject* self, PyObject* args) {
     // parse the args
     const char* script;
     Py_ssize_t len;
@@ -158,7 +158,7 @@ PyObject* LuaState_load_string(LuaStateObject* self, PyObject* args) {
 /**
  * Implements LuaState.get_globals, which returns the global table
  */
-PyObject* LuaState_get_globals(LuaStateObject *self, void *unused) {
+static PyObject* LuaState_get_globals(LuaStateObject *self, void *unused) {
     PYLUA_CHECK(L, &self->info, NULL);
 
 #if LUA_VERSION_NUM >= 502
@@ -175,7 +175,7 @@ PyObject* LuaState_get_globals(LuaStateObject *self, void *unused) {
 /**
  * Implements LuaState.new_table, which returns a new thread
  */
-PyObject* LuaState_new_thread(LuaStateObject* self, PyObject* args) {
+static PyObject* LuaState_new_thread(LuaStateObject* self, PyObject* args) {
     PYLUA_CHECK(L, &self->info, NULL);
     PYLUA_PROTECT(&self->info, NULL);
 
@@ -193,7 +193,7 @@ PyObject* LuaState_new_thread(LuaStateObject* self, PyObject* args) {
 /**
  * Implements LuaState.new_table, which returns a new empty table
  */
-PyObject* LuaState_new_table(LuaStateObject* self, PyObject* args) {
+static PyObject* LuaState_new_table(LuaStateObject* self, PyObject* args) {
     //if (!PyArg_ParseTuple(args, "")) {
     //    return NULL;
     //}
@@ -216,7 +216,7 @@ PyObject* LuaState_new_table(LuaStateObject* self, PyObject* args) {
  * Implements LuaState.new_userdata, which converts a Python object
  * to a lua userdata
  */
-PyObject* LuaState_new_userdata(LuaStateObject* self, PyObject* args) {
+static PyObject* LuaState_new_userdata(LuaStateObject* self, PyObject* args) {
     PyObject* obj;
     if (!PyArg_ParseTuple(args, "O", &obj)) {
         return NULL;
@@ -247,7 +247,7 @@ PyObject* LuaState_new_userdata(LuaStateObject* self, PyObject* args) {
  * Implements LuaState.new_function.
  * This method takes a single callable parameter, and creates a LuaFunction from it
  */
-PyObject* LuaState_new_function(LuaStateObject* self, PyObject* args) {
+static PyObject* LuaState_new_function(LuaStateObject* self, PyObject* args) {
     PyObject* func;
 
     if (!PyArg_ParseTuple(args, "O", &func)) {
@@ -293,7 +293,7 @@ PyObject* LuaState_new_function(LuaStateObject* self, PyObject* args) {
  * Implements LuaState.set_hook, which binds a Lua debug hook
  * to a python callable
  */
-PyObject* LuaState_set_hook(LuaStateObject* self, PyObject* args) {
+static PyObject* LuaState_set_hook(LuaStateObject* self, PyObject* args) {
     PyObject* hook;
     int mask = 0;
     int count = 0;
@@ -320,7 +320,7 @@ PyObject* LuaState_set_hook(LuaStateObject* self, PyObject* args) {
  * Implements LuaState.close(), which closes the lua state
  * Returns True if the state was closed, False otherwise.
  */
-PyObject* LuaState_close(LuaStateObject* self, void* unused) {
+static PyObject* LuaState_close(LuaStateObject* self, void* unused) {
     if (self->info.state) {
         lua_close(self->info.state);
         self->info.state = NULL;
@@ -334,7 +334,7 @@ PyObject* LuaState_close(LuaStateObject* self, void* unused) {
  * Getter for LuaState.mem_usage
  * Returns the current memory usage
  */
-PyObject* LuaState_get_mem_usage(LuaStateObject* self, void* unused) {
+static PyObject* LuaState_get_mem_usage(LuaStateObject* self, void* unused) {
     return PyLong_FromSize_t(self->mem);
 }
 
@@ -342,7 +342,7 @@ PyObject* LuaState_get_mem_usage(LuaStateObject* self, void* unused) {
  * Getter for LuaState.mem_limit
  * Returns the memory limit
  */
-PyObject* LuaState_get_mem_limit(LuaStateObject* self, void* unused) {
+static PyObject* LuaState_get_mem_limit(LuaStateObject* self, void* unused) {
     return PyLong_FromSize_t(self->limit);
 }
 
@@ -350,7 +350,7 @@ PyObject* LuaState_get_mem_limit(LuaStateObject* self, void* unused) {
  * Setter for LuaState.mem_limit
  * Sets the memory limit
  */
-int LuaState_set_mem_limit(LuaStateObject* self, PyObject* value, void* unused) {
+static int LuaState_set_mem_limit(LuaStateObject* self, PyObject* value, void* unused) {
     size_t limit = PyLong_AsSize_t(value);
     if (limit == (size_t)-1 && PyErr_Occurred()) {
         return -1;
@@ -364,7 +364,7 @@ int LuaState_set_mem_limit(LuaStateObject* self, PyObject* value, void* unused) 
  * Getter for LuaState.time_limit
  * Returns the execution time limit
  */
-PyObject* LuaState_get_time_limit(LuaStateObject* self, void* unused) {
+static PyObject* LuaState_get_time_limit(LuaStateObject* self, void* unused) {
     return PyLong_FromLong(self->info.timelimit);
 }
 
@@ -372,7 +372,7 @@ PyObject* LuaState_get_time_limit(LuaStateObject* self, void* unused) {
  * Setter for LuaState.time_limit
  * Sets the execution time limit
  */
-int LuaState_set_time_limit(LuaStateObject* self, PyObject* value, void* unused) {
+static int LuaState_set_time_limit(LuaStateObject* self, PyObject* value, void* unused) {
     int limit = pylua_pylong_as_int(value);
     if (limit == -1 && PyErr_Occurred()) {
         return -1;
@@ -395,7 +395,7 @@ int LuaState_set_time_limit(LuaStateObject* self, PyObject* value, void* unused)
 /**
  * Handle deallocation of LuaState
  */
-void LuaState_dealloc(LuaStateObject* self) {
+static void LuaState_dealloc(LuaStateObject* self) {
     if (self->info.state) {
         lua_close(self->info.state);
         self->info.state = NULL;

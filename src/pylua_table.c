@@ -5,7 +5,7 @@
 /**
  * Implements `len` for a LuaTable
  */
-Py_ssize_t LuaTable_length(LuaObject* self) {
+static Py_ssize_t LuaTable_length(LuaObject* self) {
     PYLUA_CHECK(L, &self->sobj->info, -1);
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, self->ref);
@@ -21,7 +21,7 @@ Py_ssize_t LuaTable_length(LuaObject* self) {
 /**
  * Implements `getattr` AND `getitem` for a LuaTable
  */
-PyObject* LuaTable_getattr(LuaObject* self, PyObject* attr) {
+static PyObject* LuaTable_getattr(LuaObject* self, PyObject* attr) {
     PYLUA_CHECK(L, &self->sobj->info, NULL);
     PYLUA_PROTECT(&self->sobj->info, NULL);
 
@@ -46,7 +46,7 @@ PyObject* LuaTable_getattr(LuaObject* self, PyObject* attr) {
 /**
  * Implements `setattr` AND `setitem` for a LuaTable
  */
-int LuaTable_setattr(LuaObject* self, PyObject* attr, PyObject* value) {
+static int LuaTable_setattr(LuaObject* self, PyObject* attr, PyObject* value) {
     PYLUA_CHECK(L, &self->sobj->info, -1);
     PYLUA_PROTECT(&self->sobj->info, -1);
 

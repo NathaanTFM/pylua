@@ -9,7 +9,7 @@
  * which allows us to call the lua function with python arguments,
  * and return a python object.
  */
-PyObject* LuaFunction_call(LuaObject* self, PyObject* args, PyObject* kwargs) {
+static PyObject* LuaFunction_call(LuaObject* self, PyObject* args, PyObject* kwargs) {
     // We do not allow keyword arguments
     if (kwargs && PyDict_Size(kwargs)) {
         PyErr_SetString(PyExc_TypeError, "unexpected keyword argument");
@@ -36,7 +36,7 @@ PyObject* LuaFunction_call(LuaObject* self, PyObject* args, PyObject* kwargs) {
  * For Lua >= 5.2, it uses the upvalue 1 which should contain the global table,
  * For Lua <= 5.1, it just uses getfenv
  */
-PyObject* LuaFunction_getfenv(LuaObject* self, PyObject* args) {
+static PyObject* LuaFunction_getfenv(LuaObject* self, PyObject* args) {
     PYLUA_CHECK(L, &self->sobj->info, NULL);
 
     // Protect from memory allocation errors
@@ -68,7 +68,7 @@ PyObject* LuaFunction_getfenv(LuaObject* self, PyObject* args) {
  * For Lua >= 5.2, it uses the upvalue 1 which should contain the global table,
  * For Lua <= 5.1, it just uses setfenv
  */
-PyObject* LuaFunction_setfenv(LuaObject* self, PyObject* args) {
+static PyObject* LuaFunction_setfenv(LuaObject* self, PyObject* args) {
     PyObject* env;
 
     if (!PyArg_ParseTuple(args, "O!", &LuaTableType, &env)) {

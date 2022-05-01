@@ -6,7 +6,4 @@
 
 PyTypeObject LuaThreadType;
 
-PyObject* LuaThread_call(LuaObject* self, PyObject* args);
-PyObject* LuaThread_get_state(LuaObject* self, PyObject* args);
-
 #endif

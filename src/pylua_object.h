@@ -17,8 +17,4 @@ typedef struct {
 
 PyTypeObject LuaObjectType;
 
-Py_hash_t LuaObject_hash(LuaObject* self);
-PyObject* LuaObject_richcompare(LuaObject* self, PyObject* other, int op);
-void LuaObject_dealloc(LuaObject* self);
-
 #endif
