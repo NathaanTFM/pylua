@@ -63,5 +63,17 @@ PyMODINIT_FUNC PyInit_pylua(void) {
     PyModule_AddObject(mod, "LuaFunction", (PyObject *) &LuaFunctionType);
     PyModule_AddObject(mod, "LuaUserData", (PyObject *) &LuaUserDataType);
     PyModule_AddObject(mod, "LuaThread", (PyObject *) &LuaThreadType);
+    
+    // also some useful consts
+    PyModule_AddIntConstant(mod, "LUA_HOOKCALL", LUA_HOOKCALL);
+    PyModule_AddIntConstant(mod, "LUA_HOOKRET", LUA_HOOKRET);
+    PyModule_AddIntConstant(mod, "LUA_HOOKLINE", LUA_HOOKLINE);
+    PyModule_AddIntConstant(mod, "LUA_HOOKCOUNT", LUA_HOOKCOUNT);
+    PyModule_AddIntConstant(mod, "LUA_HOOKTAILCALL", LUA_HOOKTAILCALL);
+    
+    PyModule_AddIntConstant(mod, "LUA_MASKCALL", LUA_MASKCALL);
+    PyModule_AddIntConstant(mod, "LUA_MASKRET", LUA_MASKRET);
+    PyModule_AddIntConstant(mod, "LUA_MASKLINE", LUA_MASKLINE);
+    PyModule_AddIntConstant(mod, "LUA_MASKCOUNT", LUA_MASKCOUNT);
     return mod;
 }

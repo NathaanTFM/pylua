@@ -13,6 +13,9 @@ typedef struct _LuaStateObject {
     // Memory usage and limit
     size_t mem;
     size_t limit;
+    
+    // Debug hook
+    PyObject* hook;
 
 } LuaStateObject;
 

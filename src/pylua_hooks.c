@@ -8,9 +8,53 @@
 
 
 /**
- * Lua hook
+ * Internal function that calls a Python object,
+ * decrease the reference count of the `args` tuple.
+ *
+ * In case of error, saves the thread and attempt to
+ * jump to the nearest panic handler, or abort if not recoverable.
  */
-void pylua_hook(lua_State* L, lua_Debug* ar) {
+static PyObject* pylua_call_pyobject(struct LuaStateInfo* info, PyObject* func, PyObject* args) {
+    // attempt to call the function
+    PyObject* res = PyObject_CallObject(func, args);
+    Py_DECREF(args);
+    
+    if (!res) {
+        // save the thread back (we're leaving, so we need to do this now)
+        info->thstate = PyEval_SaveThread();
+    
+        // the function might fail due to a lua panic,
+        // (py function could be closing the lua state),
+        // so we need to check if the state still exists
+        // in our LuaStateObject
+        if (!info->state) {
+            if (info->panic) {
+                longjmp(info->panic->buf, 1);
+                
+            } else {
+                // TODO: state is lost, and no panic handler:
+                // this might not happen, but in case it does,
+                // we're not ready for it. abort.
+                fprintf(stderr, "PyLua PANIC: lost state and no panic handler\n");
+                abort();
+                return NULL; // should not return
+            }
+        } else {
+            // lua state still exists, so we're just dispatching a lua error
+            lua_pushstring(info->state, "python error on call");
+            lua_error(info->state);
+            return NULL; // should not return
+        }
+    }
+    
+    return res;
+}
+
+
+/**
+ * Builtin debug hook
+ */
+void pylua_hook_builtin(lua_State* L, lua_Debug* ar) {
     struct LuaStateInfo* info = pylua_get_stateinfo(L, L);
     
     // should we limit execution time?
@@ -26,6 +70,31 @@ void pylua_hook(lua_State* L, lua_Debug* ar) {
             lua_error(L);
         }
     }
+}
+
+
+/**
+ * Debug hook for Python functions
+ */
+void pylua_hook_python(lua_State* L, lua_Debug* ar) {
+    struct LuaStateInfo* info = pylua_get_stateinfo(L, L);
+    PyEval_RestoreThread(info->thstate);
+    
+    PyObject* evt = PyLong_FromLong(ar->event);
+    PyObject* args;
+    
+    if (ar->event == LUA_HOOKLINE) {
+        PyObject* line = PyLong_FromLong(ar->currentline);
+        args = PyTuple_Pack(2, evt, line);
+    } else {
+        args = PyTuple_Pack(1, evt);
+    }
+    
+    
+    PyObject* res = pylua_call_pyobject(info, info->root->hook, args);
+    info->thstate = PyEval_SaveThread();
+    
+    return NULL;
 }
 
 
@@ -135,36 +204,7 @@ int pylua_call_python(lua_State* L) {
     PyObject* func = *(PyObject**)lua_touserdata(L, lua_upvalueindex(1));
     
     // attempt to call the function
-    PyObject* res = PyObject_CallObject(func, args);
-    Py_DECREF(args);
-    
-    if (!res) {
-        // save the thread back (we're leaving, so we need to do this now)
-        info->thstate = PyEval_SaveThread();
-    
-        // the function might fail due to a lua panic,
-        // (py function could be closing the lua state),
-        // so we need to check if the state still exists
-        // in our LuaStateObject
-        if (!info->state) {
-            if (info->panic) {
-                longjmp(info->panic->buf, 1);
-                
-            } else {
-                // TODO: state is lost, and no panic handler:
-                // this might not happen, but in case it does,
-                // we're not ready for it. abort.
-                fprintf(stderr, "PyLua PANIC: lost state and no panic handler\n");
-                abort();
-                return 0;
-            }
-        } else {
-            // lua state still exists, so we're just dispatching a lua error
-            lua_pushstring(L, "python error on call");
-            lua_error(L);
-            return 0;
-        }
-    }
+    PyObject* res = pylua_call_pyobject(info, func, args);
 
     // arg handling:
     // if it's a tuple, unpack it, otherwise, single arg

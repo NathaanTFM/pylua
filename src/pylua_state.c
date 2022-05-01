@@ -11,7 +11,15 @@
 PyObject* LuaState_new(PyTypeObject* type, PyObject* args, PyObject* kwds) {
     LuaStateObject* self = (LuaStateObject*)type->tp_alloc(type, 0);
     if (self != NULL) {
+        self->mem = 0;
+        self->limit = 0;
+        self->hook = NULL;
+        
         self->info.state = NULL;
+        self->info.panic = NULL;
+        self->info.depth = 0;
+        self->info.thstate = NULL;
+        self->info.root = NULL;
     }
     return (PyObject*)self;
 }
@@ -32,6 +40,9 @@ int LuaState_init(LuaStateObject* self, PyObject* args, PyObject* kwds) {
     // memory info
     self->mem = 0;
     self->limit = SIZE_MAX;
+    
+    // debug hook (none)
+    self->hook = NULL;
 
     // create the state
     lua_State* L = lua_newstate((lua_Alloc)&pylua_alloc, self);
@@ -279,6 +290,33 @@ PyObject* LuaState_new_function(LuaStateObject* self, PyObject* args) {
 }
 
 /**
+ * Implements LuaState.set_hook, which binds a Lua debug hook
+ * to a python callable
+ */
+PyObject* LuaState_set_hook(LuaStateObject* self, PyObject* args) {
+    PyObject* hook;
+    int mask = 0;
+    int count = 0;
+    
+    if (!PyArg_ParseTuple(args, "O|ii", &hook, &mask, &count))
+        return NULL;
+    
+    if (hook == Py_None) {
+        Py_XDECREF(self->hook);
+        self->hook = NULL;
+        lua_sethook(self->info.state, NULL, 0, 0);
+        
+    } else {
+        Py_INCREF(hook);
+        Py_XDECREF(self->hook);
+        self->hook = hook;
+        lua_sethook(self->info.state, &pylua_hook_python, mask, count); 
+    }
+    
+    Py_RETURN_NONE;
+}
+
+/**
  * Implements LuaState.close(), which closes the lua state
  * Returns True if the state was closed, False otherwise.
  */
@@ -339,12 +377,17 @@ int LuaState_set_time_limit(LuaStateObject* self, PyObject* value, void* unused)
     if (limit == -1 && PyErr_Occurred()) {
         return -1;
     }
+    
+    if (self->hook) {
+        PyErr_SetString(PyExc_Exception, "cannot set time limit when a debug hook is set");
+        return -1;
+    }
 
     self->info.timelimit = limit;
     if (limit == 0) {
         lua_sethook(self->info.state, NULL, 0, 0); 
     } else {
-        lua_sethook(self->info.state, &pylua_hook, LUA_MASKCOUNT, limit * 250); 
+        lua_sethook(self->info.state, &pylua_hook_builtin, LUA_MASKCOUNT, limit * 250); 
     }
     return 0;
 }
@@ -382,7 +425,7 @@ static PyMethodDef LuaState_methods[] = {
     {"new_table", (PyCFunction)LuaState_new_table, METH_NOARGS, "create a new table"},
     {"new_userdata", (PyCFunction)LuaState_new_userdata, METH_VARARGS, "create a new userdata"},
     {"new_function", (PyCFunction)LuaState_new_function, METH_VARARGS, "create a LuaFunction bound to a Python callable"},
-    //{"sethook", (PyCFunction)LuaState_sethook, METH_VARARGS, "set a lua debug hook"},
+    {"set_hook", (PyCFunction)LuaState_set_hook, METH_VARARGS, "set a lua debug hook"},
     {"close", (PyCFunction)LuaState_close, METH_NOARGS, "close the lua state"},
     {NULL}
 };
